@@ -6,7 +6,6 @@ import Cell from "./Cell"
 import { Editor } from "slate-react"
 import { Value } from "slate"
 import ValueViewer from './ValueViewer'
-import { red } from "ansi-colors";
 
 
 const initialValue = {
@@ -30,8 +29,6 @@ const initialValue = {
 
 
 class TableData extends React.Component{
-
-    timeout = null;
 
     constructor(props) {
         super(props);
@@ -94,23 +91,29 @@ class TableData extends React.Component{
          }
       }
 
-      checkIndex = () => {
-        const indexStartRow = this.state.savedSelection.start.i
-        const indexStartCol = this.state.savedSelection.start.j
-        const indexEndRow = this.state.savedSelection.end.i
-        const indexEndCol = this.state.savedSelection.end.j
-        var savedSelection = this.state.savedSelection
-        var start = this.state.savedSelection.start
-        var end = this.state.savedSelection.end
+      getIndex = () => {
+        return {
+          indexStartRow : this.state.savedSelection.start.i,
+          indexStartCol : this.state.savedSelection.start.j,
+          indexEndRow : this.state.savedSelection.end.i,
+          indexEndCol : this.state.savedSelection.end.j
+        }
+      }
+
+      indexSwapping = () => {
+        const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
+        let savedSelection = this.state.savedSelection
+        let start = this.state.savedSelection.start
+        let end = this.state.savedSelection.end
         if((indexStartRow > indexEndRow) && (indexStartCol > indexEndCol)){
           savedSelection.start = savedSelection.end
           savedSelection.end = start
         }else if((indexStartRow > indexEndRow) && (indexStartCol <= indexEndCol)){
-          var temp = savedSelection.start.i
+          let temp = savedSelection.start.i
           savedSelection.start.i = end.i
           savedSelection.end.i = temp
         }else if((indexStartRow <= indexEndRow) && (indexStartCol > indexEndCol)){
-          var temp = savedSelection.start.j
+          let temp = savedSelection.start.j
           savedSelection.start.j = end.j
           savedSelection.end.j = temp
         }
@@ -119,8 +122,8 @@ class TableData extends React.Component{
 
       mergeColonnes = (indexStartCol, indexEndCol, indexStartRow) => {
         const grid = this.state.grid
-        var sommeCol = 0;
-        for(var j = indexStartCol+1; j <= indexEndCol; j++){
+        let sommeCol = 0;
+        for(let j = indexStartCol+1; j <= indexEndCol; j++){
           if(grid[indexStartRow][j]=== undefined){
             sommeCol--
             continue
@@ -143,8 +146,8 @@ class TableData extends React.Component{
 
       mergeLignes = (indexStartRow, indexEndRow, indexStartCol) => {
         const grid = this.state.grid
-        var sommeRow = 0;
-        for(var i = indexStartRow+1; i <= indexEndRow; i++){
+        let sommeRow = 0;
+        for(let i = indexStartRow+1; i <= indexEndRow; i++){
           if(grid[i][indexStartCol]=== undefined){
             sommeRow--
             continue
@@ -168,16 +171,13 @@ class TableData extends React.Component{
       handleMerge = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           if((indexStartRow === indexEndRow) && (indexStartCol === indexEndCol)){
             console.log("Cette fonctionnalite s'applique pas sur une seul cellule")
           }else if((indexStartRow !== indexEndRow) && (indexStartCol !== indexEndCol)){
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 this.mergeColonnes(indexStartCol, j, i)
               }
               this.mergeLignes(indexStartRow, i, indexStartCol)
@@ -194,11 +194,10 @@ class TableData extends React.Component{
         
          if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol} = this.getIndex()
           const grid = this.state.grid
-          var colspan, rowspan, style
+          let colspan, rowspan, style
           if(grid[indexStartRow][indexStartCol].hasOwnProperty("colSpan")){
             colspan = parseInt(grid[indexStartRow][indexStartCol].colSpan)
           }
@@ -209,17 +208,17 @@ class TableData extends React.Component{
             style = grid[indexStartRow][indexStartCol].style
           }
           if((rowspan !==  undefined) && (colspan !==  undefined)){
-            for(var i = 0; i < rowspan; i++){
-              for(var j = 0; j < colspan; j++){
+            for(let i = 0; i < rowspan; i++){
+              for(let j = 0; j < colspan; j++){
                 grid[indexStartRow+i][indexStartCol+j]={"value": grid[indexStartRow][indexStartCol].value, "style": style}
               }
             }
           }else if(rowspan !==  undefined){
-            for(var i = 0; i < rowspan; i++){
+            for(let i = 0; i < rowspan; i++){
               grid[indexStartRow+i][indexStartCol]={"value": grid[indexStartRow][indexStartCol].value, "style": style}
             }
           }else{
-            for(var j = 0; j < colspan; j++){
+            for(let j = 0; j < colspan; j++){
               grid[indexStartRow][indexStartCol+j]={"value": grid[indexStartRow][indexStartCol].value, "style": style}
             }
           }
@@ -230,14 +229,11 @@ class TableData extends React.Component{
       handleAddBorderArround = () => {
         if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 let style = {}
                 if(grid[i][j]=== undefined){
                   continue
@@ -295,14 +291,11 @@ class TableData extends React.Component{
       handleAddBorderVertical = () => {
         if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol+1; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol+1; j <= indexEndCol; j++){
                 if(grid[i][j]=== undefined){
                   continue
                 }
@@ -320,14 +313,11 @@ class TableData extends React.Component{
       handleAddBorderHorizontal = () => {
         if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = indexStartRow+1; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow+1; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 if(grid[indexEndRow][j]=== undefined){
                   continue
                 }
@@ -345,14 +335,11 @@ class TableData extends React.Component{
       handleCancelStyle = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               delete grid[i][j].style
             }
           }
@@ -363,12 +350,10 @@ class TableData extends React.Component{
       handleAddBorderTop = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[indexStartRow][j]=== undefined){
                 continue
               }
@@ -385,12 +370,10 @@ class TableData extends React.Component{
       handleAddBorderRight = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
               if(grid[i][indexEndCol]=== undefined){
                 continue
               }
@@ -407,12 +390,10 @@ class TableData extends React.Component{
       handleAddBorderBottom = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[indexEndRow][j]=== undefined){
                 continue
               }
@@ -429,12 +410,10 @@ class TableData extends React.Component{
       handleAddBorderLeft = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
               if(grid[i][indexStartCol]=== undefined){
                 continue
               }
@@ -451,14 +430,11 @@ class TableData extends React.Component{
       handleAddMarginTop = (event) => {
         if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 if(grid[i][j]=== undefined){
                   continue
                 }
@@ -477,14 +453,11 @@ class TableData extends React.Component{
         console.log(event.target.value)
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -502,14 +475,11 @@ class TableData extends React.Component{
       handleAddMarginLeft = (event) => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -527,14 +497,11 @@ class TableData extends React.Component{
       handleAddMarginRight = (event) => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -551,7 +518,7 @@ class TableData extends React.Component{
 
       handleAddRow = () => {
           const row = []
-          for(var i=0; i<this.state.grid[0].length; i++){
+          for(let i=0; i<this.state.grid[0].length; i++){
               row.push({value: ""})
           }
           const grid = this.state.grid
@@ -561,7 +528,7 @@ class TableData extends React.Component{
 
       handleAddColoumn = () => {
         const grid = this.state.grid
-        for(var i=0; i<this.state.grid.length; i++){
+        for(let i=0; i<this.state.grid.length; i++){
             grid[i].push({style:{width: "100px"}, value: ""})
         }
         this.setState({ grid })
@@ -570,15 +537,17 @@ class TableData extends React.Component{
       handleRemoveColoumn = () => {
           if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartCol = this.state.savedSelection.start.j
+            this.indexSwapping()
+            const {indexStartCol, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = 0; i < grid.length; i++){
-              if(grid[i][indexStartCol]=== undefined){
-                continue
+            for(let i = 0; i < grid.length; i++){
+              for(let j = indexEndCol; j >= indexStartCol; j--){
+                if(grid[i][j]=== undefined){
+                  continue
+                }
+                //delete grid[i][indexStartCol]
+                grid[i].splice(j,1)
               }
-              //delete grid[i][indexStartCol]
-              grid[i].splice(indexStartCol,1)
             }
             this.setState({grid})
           }
@@ -587,17 +556,18 @@ class TableData extends React.Component{
       handleRemoveRow = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
+          this.indexSwapping()
+          const {indexStartRow, indexEndRow } = this.getIndex()
           const grid = this.state.grid
-          while(grid[indexStartRow].length > 0){
-            if(grid[indexStartRow][0]=== undefined){
-              continue
+          for(let i = indexEndRow; i >= indexStartRow ; i--){
+            while(grid[i].length > 0){
+              if(grid[i][0]=== undefined){
+                continue
+              }
+              grid[i].splice(0,1)
             }
-            //delete grid[i][indexStartCol]
-            grid[indexStartRow].splice(0,1)
+            grid.splice(i, 1)
           }
-          grid.splice(indexStartRow, 1)
           this.setState({grid})
         }
       }
@@ -615,15 +585,12 @@ class TableData extends React.Component{
           this.setState({colorCell: event.target.value})
           if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
             let style = null
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 if(grid[i][j]=== undefined){
                   continue
                 }
@@ -645,14 +612,11 @@ class TableData extends React.Component{
         this.setState({ fontSize }, () => {
           if (this.state.selection) {
             this.setState({selection: this.state.savedSelection})
-            this.checkIndex()
-            const indexStartRow = this.state.savedSelection.start.i
-            const indexStartCol = this.state.savedSelection.start.j
-            const indexEndRow = this.state.savedSelection.end.i
-            const indexEndCol = this.state.savedSelection.end.j
+            this.indexSwapping()
+            const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
             const grid = this.state.grid
-            for(var i = indexStartRow; i <= indexEndRow; i++){
-              for(var j = indexStartCol; j <= indexEndCol; j++){
+            for(let i = indexStartRow; i <= indexEndRow; i++){
+              for(let j = indexStartCol; j <= indexEndCol; j++){
                 if(grid[i][indexEndCol]=== undefined){
                   continue
                 }
@@ -672,14 +636,11 @@ class TableData extends React.Component{
         console.log("top")
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -698,14 +659,11 @@ class TableData extends React.Component{
         console.log("bottom")
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -724,14 +682,11 @@ class TableData extends React.Component{
         console.log("Left")
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -750,14 +705,11 @@ class TableData extends React.Component{
         console.log("right")
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
@@ -772,26 +724,43 @@ class TableData extends React.Component{
         }
       }
 
-      handleAlignCenter = () => {
-        console.log("Center")
+      handleVerticalCenter = () => {
         if (this.state.selection) {
           this.setState({selection: this.state.savedSelection})
-          this.checkIndex()
-          const indexStartRow = this.state.savedSelection.start.i
-          const indexStartCol = this.state.savedSelection.start.j
-          const indexEndRow = this.state.savedSelection.end.i
-          const indexEndCol = this.state.savedSelection.end.j
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
           const grid = this.state.grid
-          for(var i = indexStartRow; i <= indexEndRow; i++){
-            for(var j = indexStartCol; j <= indexEndCol; j++){
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
               if(grid[i][j]=== undefined){
                 continue
               }
               if(grid[i][j].hasOwnProperty("style")){
                 grid[i][j]["style"].verticalAlign = "middle"
+              }else{
+                grid[i][j]["style"] = {verticalAlign : "middle"}
+              }
+            }
+          }
+          this.setState({grid})
+        }
+      }
+
+      handleHorizontalCenter = () => {
+        if (this.state.selection) {
+          this.setState({selection: this.state.savedSelection})
+          this.indexSwapping()
+          const {indexStartRow, indexStartCol, indexEndRow, indexEndCol} = this.getIndex()
+          const grid = this.state.grid
+          for(let i = indexStartRow; i <= indexEndRow; i++){
+            for(let j = indexStartCol; j <= indexEndCol; j++){
+              if(grid[i][j]=== undefined){
+                continue
+              }
+              if(grid[i][j].hasOwnProperty("style")){
                 grid[i][j]["style"].textAlign= "center";
               }else{
-                grid[i][j]["style"] = {verticalAlign : "middle", textAlign: "center"}
+                grid[i][j]["style"] = {textAlign: "center"}
               }
             }
           }
@@ -815,7 +784,8 @@ class TableData extends React.Component{
             <button className="tableAction" onClick={this.handleAlignBottom}>Align Bottom</button>
             <button className="tableAction" onClick={this.handleAlignLeft}>Align Left</button>
             <button className="tableAction" onClick={this.handleAlignRight}>Align Right</button>
-            <button className="tableAction" onClick={this.handleAlignCenter}>Align center</button><br/>
+            <button className="tableAction" onClick={this.handleVerticalCenter}>Vertical center</button>
+            <button className="tableAction" onClick={this.handleHorizontalCenter}>horizontal center</button><br/>
 
             <input  className="tableAction" type="number" min="0" onChange={this.handleAddMarginTop} /><br/>
             <input  className="tableAction" type="number" min="0" onChange={this.handleAddMarginLeft} />
