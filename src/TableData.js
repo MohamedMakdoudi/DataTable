@@ -7,26 +7,22 @@ import { Editor } from "slate-react"
 import { Value } from "slate"
 import ValueViewer from './ValueViewer'
 
-
 const initialValue = {
-    document: {
-      nodes: [
-        {
-          object: "block",
-          type: "paragraph",
-          nodes: [
-            {
-              object: "text",
-              text: "Le Lorem Ipsum texte employé."
-            }
-          ]
-        }
-      ]
-    }
-  };
-
-
-
+  document: {
+    nodes: [
+      {
+        object: "block",
+        type: "paragraph",
+        nodes: [
+          {
+            object: "text",
+            text: "Le Lorem Ipsum texte employé."
+          }
+        ]
+      }
+    ]
+  }
+};
 
 class TableData extends React.Component{
 
@@ -133,13 +129,15 @@ class TableData extends React.Component{
           }
           delete grid[indexStartRow][j]
         }
-        if(grid[indexStartRow][indexStartCol].hasOwnProperty("colSpan")){
-          sommeCol += grid[indexStartRow][indexStartCol].colSpan
-        }
-        if(sommeCol !== 0){
-          grid[indexStartRow][indexStartCol].colSpan = (indexEndCol-indexStartCol) + sommeCol
-        }else{
-          grid[indexStartRow][indexStartCol].colSpan = (indexEndCol-indexStartCol) + 1
+        if(grid[indexStartRow][indexStartCol] !== undefined){
+          if(grid[indexStartRow][indexStartCol].hasOwnProperty("colSpan")){
+            sommeCol += grid[indexStartRow][indexStartCol].colSpan
+          }
+          if(sommeCol !== 0){
+            grid[indexStartRow][indexStartCol].colSpan = (indexEndCol-indexStartCol) + sommeCol
+          }else{
+            grid[indexStartRow][indexStartCol].colSpan = (indexEndCol-indexStartCol) + 1
+          }
         }
         this.setState({grid})
       }
@@ -157,13 +155,15 @@ class TableData extends React.Component{
           }
           delete grid[i][indexStartCol]
         }
-        if(grid[indexStartRow][indexStartCol].hasOwnProperty("rowSpan")){
-          sommeRow += grid[indexStartRow][indexStartCol].rowSpan
-        }
-        if(sommeRow !== 0){
-          grid[indexStartRow][indexStartCol].rowSpan = (indexEndRow-indexStartRow) + sommeRow
-        }else{
-          grid[indexStartRow][indexStartCol].rowSpan = (indexEndRow-indexStartRow) + 1
+        if(grid[indexStartRow][indexStartCol] !== undefined){
+          if(grid[indexStartRow][indexStartCol].hasOwnProperty("rowSpan")){
+            sommeRow += grid[indexStartRow][indexStartCol].rowSpan
+          }
+          if(sommeRow !== 0){
+            grid[indexStartRow][indexStartCol].rowSpan = (indexEndRow-indexStartRow) + sommeRow
+          }else{
+            grid[indexStartRow][indexStartCol].rowSpan = (indexEndRow-indexStartRow) + 1
+          }
         }
         this.setState({grid})
       }
@@ -177,7 +177,7 @@ class TableData extends React.Component{
             console.log("Cette fonctionnalite s'applique pas sur une seul cellule")
           }else if((indexStartRow !== indexEndRow) && (indexStartCol !== indexEndCol)){
             for(let i = indexStartRow; i <= indexEndRow; i++){
-              for(let j = indexStartCol; j <= indexEndCol; j++){
+              for(let j = indexStartCol+1; j <= indexEndCol; j++){
                 this.mergeColonnes(indexStartCol, j, i)
               }
               this.mergeLignes(indexStartRow, i, indexStartCol)
@@ -772,7 +772,7 @@ class TableData extends React.Component{
         this.setState({savedSelection:selection, selection});
       }
     
-      render() {  
+      render() { 
         return (
           <div>
             <button className="tableAction" onClick={this.handleAddColoumn}>add coloumn</button>
@@ -782,10 +782,10 @@ class TableData extends React.Component{
 
             <button className="tableAction" onClick={this.handleAlignTop}>Align Top</button>
             <button className="tableAction" onClick={this.handleAlignBottom}>Align Bottom</button>
-            <button className="tableAction" onClick={this.handleAlignLeft}>Align Left</button>
+            <button className="tableAction" onClick={this.handleAlignLeft}>Align Left </button>
             <button className="tableAction" onClick={this.handleAlignRight}>Align Right</button>
-            <button className="tableAction" onClick={this.handleVerticalCenter}>Vertical center</button>
-            <button className="tableAction" onClick={this.handleHorizontalCenter}>horizontal center</button><br/>
+            <button className="tableAction" onClick={this.handleVerticalCenter}>Vertical center </button>
+            <button className="tableAction" onClick={this.handleHorizontalCenter}>horizontal center </button><br/>
 
             <input  className="tableAction" type="number" min="0" onChange={this.handleAddMarginTop} /><br/>
             <input  className="tableAction" type="number" min="0" onChange={this.handleAddMarginLeft} />
@@ -803,8 +803,8 @@ class TableData extends React.Component{
             <button className="tableAction" onClick={this.handleAddBorderVertical}>add Border vertical</button>
             <button className="tableAction" onClick={this.handleAddBorderHorizontal}>add Border horizontal</button><br/>
             
-            <button className="tableAction" onClick={this.handleCancelStyle}>Cancel Style</button>
-            <button className="tableAction" onClick={this.handleMerge}>Merge Cell</button>
+            <button className="tableAction" onClick={this.handleCancelStyle}>Cancel Style </button>
+            <button className="tableAction" onClick={this.handleMerge}>Merge Cell </button>
             <button className="tableAction" onClick={this.handleUnmerge}>Unmerge Cell</button><br/><br/>
 
             <select className="tableAction" onChange={this.handleChangeBorder}>
